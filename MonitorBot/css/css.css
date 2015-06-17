@@ -1,3 +1,4 @@
+/*
 /**********
 GENERAL
 **********/
@@ -27,10 +28,10 @@ a {
 }
 
 
-#bot {
+/*#bot {
 	text-align: left;
 	margin: 0;
-}
+}*/
 
 /************
 BODY
@@ -55,7 +56,7 @@ NAV
 	width: 2%;
 } */
 
-.nav {
+/*.nav {
 	margin: 0 auto;
 	padding: 20px;
 	width: 80%;
@@ -67,7 +68,7 @@ NAV
 	-webkit-justify-content: space-between;
 }
 
-li {
+.nav li {
 	margin: 10px;
 	border-radius: 10px;
 	background: #70968c;
@@ -79,8 +80,8 @@ li {
 	padding: 15px;
 	color: inherit;
 	text-decoration: none;
-}
-
+} 
+*/
 
 
 /************
