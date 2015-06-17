@@ -1,7 +1,7 @@
-
-from flask import current_app, request, url_for
+from flask import current_app, request, url_for, jsonify
 from datetime import datetime
 from . import db
+import json
 
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -74,14 +74,13 @@ class User(db.Model):
         return '<User %r>' % self.username
 
     def to_json(self):
-        json_user = {
+        json_rep = {
             'id': self.id,
             'username': self.username,
             'email': self.email,
-            'role': self.role,
-            'watch_count': self.watchs.all().count()
+            'role': self.role
         }
-        return json_user
+        return json.dumps(json_rep)
 
     # @staticmethod
     # def from_json(json_rep):
