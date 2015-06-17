@@ -14,6 +14,13 @@ class Role(db.Model):
 
     users = db.relationship('User', backref='role', lazy='noload')
 
+    def to_json(self):
+        json_rep = {
+            'id': self.id,
+            'name': self.name
+        }
+        return json.dumps(json_rep)
+
     def __repr__(self):
         return '<Role %r>' % self.name
 
@@ -27,6 +34,14 @@ class Frequency(db.Model):
     value = db.Column(db.BigInteger, unique=True)
 
     watchs = db.relationship('Watch', backref='frequency', lazy='noload')
+
+    def to_json(self):
+        json_rep = {
+            'id': self.id,
+            'name': self.name,
+            'value': self.value
+        }
+        return json.dumps(json_rep)
 
     def __repr__(self):
         return '<Role %r>' % self.name
