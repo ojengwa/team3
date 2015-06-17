@@ -1,3 +1,15 @@
+/**********
+GENERAL
+**********/
+/*. {
+	background-color: grey;
+} */
+
+
+* {
+	box-sizing: border-box;
+} 
+
 /***********
 HEADING
 ***********/
@@ -11,6 +23,7 @@ header img {
 
 a {
 	text-decoration: none;
+	list-style-type: none;
 }
 
 
@@ -26,6 +39,57 @@ BODY
 body {
 	background-color: #fff;
 	color: #999;
+	font-size: small;
+	font-family: verdana;
+}
+
+
+
+/***********
+NAV
+***********/
+/*.nav img {
+	float: left;
+	position: absolute;
+	height: 2%;
+	width: 2%;
+} */
+
+.nav {
+	margin: 0 auto;
+	padding: 20px;
+	width: 80%;
+	border: 2px solid;
+	background: grey;
+	list-style-type: none;
+	display: -webkit-flex;
+	-webkit-flex-direction: row;
+	-webkit-justify-content: space-between;
+}
+
+li {
+	margin: 10px;
+	border-radius: 10px;
+	background: #70968c;
+	color: #fff;
+}
+
+.nav a {
+	display: block;
+	padding: 15px;
+	color: inherit;
+	text-decoration: none;
+}
+
+
+
+/************
+DIV
+************/
+.up {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 
