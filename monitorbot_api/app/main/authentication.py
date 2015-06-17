@@ -9,5 +9,3 @@ def auth_user(auth_token):
 
 
 
-
-

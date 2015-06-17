@@ -56,6 +56,7 @@ def new_user():
     response = {}
     response["user"] = user.to_json()
     response["auth_token"] = auth_token
+    response["status"] = "success"
 
     return jsonify(response)
 
@@ -89,8 +90,33 @@ def update_user(token, id):
     # create and send response
     response = {}
     response["user"] = user.to_json()
+    response["status"] = "success"
 
     return jsonify(response)
+
+
+"""delete"""
+@main.route('/<token>/users/<int:id>/', methods=["DELETE"])
+def delete_user(token, id):
+    if not auth_user(token):
+        return unauthorized("You have to be logged in to perform this action")
+    
+    user = User.query.get(id)
+    if not user:
+        not_found("Resource not found!")
+
+    # delete and commit
+    db.session.delete(user)
+    db.session.commit()
+
+    # ! delete associated watchs and checks!
+    # 
+
+    # create and send response
+    response = {}
+    response["status"] = "success"
+
+    return json.dumps(response)
 
 
 
