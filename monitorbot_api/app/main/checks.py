@@ -2,7 +2,7 @@ import json
 import time
 
 from flask import g, request, current_app, url_for
-from ..models import Watch
+from ..models import Check, Watch
 from .. import db
 from . import main
 from .authentication import auth_user

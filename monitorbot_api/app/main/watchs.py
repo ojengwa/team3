@@ -68,7 +68,7 @@ def new_watch(token):
 
 """update"""
 @main.route('/<token>/watchs/<int:id>/', methods=['PUT'])
-def update_user(token, id):
+def update_watch(token, id):
     if not auth_user(token):
         return unauthorized("You have to be logged in to perform this action")
     
@@ -106,7 +106,7 @@ def update_user(token, id):
 
 """delete"""
 @main.route('/<token>/watchs/<int:id>/', methods=["DELETE"])
-def update_user(token, id):
+def delete_watch(token, id):
     if not auth_user(token):
         return unauthorized("You have to be logged in to perform this action")
     

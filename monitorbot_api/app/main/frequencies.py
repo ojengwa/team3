@@ -2,7 +2,7 @@ import json
 import time
 
 from flask import g, request, current_app, url_for
-from ..models import Watch
+from ..models import Frequency
 from .. import db
 from . import main
 from .authentication import auth_user
@@ -22,7 +22,7 @@ def get_frequencies(token):
 
 """read one"""
 @main.route('/<token>/frequencies/<int:id>/', methods=['GET'])
-def get_watch(token, id):
+def get_frequency(token, id):
     if not auth_user(token):
         return unauthorized("You have to be logged in to perform this action")
     # get and return one with id:
@@ -34,7 +34,7 @@ def get_watch(token, id):
 
 """create"""
 @main.route('/<token>/frequencies/', methods=['POST'])
-def new_watch(token):
+def new_frequency(token):
     if not auth_user(token):
         return unauthorized("You have to be logged in to perform this action")
 
@@ -59,7 +59,7 @@ def new_watch(token):
 
 """delete"""
 @main.route('/<token>/frequencies/<int:id>/', methods=["DELETE"])
-def update_user(token, id):
+def delete_frequency(token, id):
     if not auth_user(token):
         return unauthorized("You have to be logged in to perform this action")
     
