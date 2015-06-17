@@ -1,127 +1,138 @@
 import json
-from flask import g, jsonify, request, current_app, url_for
-from ..models import User
+import time
+
+from flask import g, request, current_app, url_for
+from ..models import User, Watch, Check
 from .. import db
 from . import main
 from .authentication import auth_user
 from .errors import bad_request, unauthorized, forbidden, not_found
 
 
-
 """read all"""
-@main.route('/<token>/users/', methods=['GET'])                                   
-def get_users(token):
+@main.route('/<token>/watchs/', methods=['GET'])                                   
+def get_watchs(token):
     if not auth_user(token):
         return unauthorized("You have to be logged in to perform this action")
     # get and return all:
-    users = User.query.all()
-    list_of_dicts = [json.loads(user.to_json()) for user in users]
+    watchs = Watchs.query.filter_by(user = g.current_user).all()
+    list_of_dicts = [json.loads(watch.to_json()) for watch in watchs]
     return json.dumps(list_of_dicts)
 
 
-
 """read one"""
-@main.route('/<token>/users/<int:id>/', methods=['GET'])
-def get_user(token, id):
+@main.route('/<token>/watchs/<int:id>/', methods=['GET'])
+def get_watch(token, id):
     if not auth_user(token):
         return unauthorized("You have to be logged in to perform this action")
     # get and return one with id:
-    user = User.query.get(id)
-    if user == None:
+    watch = Watchs.query.get(id)
+    if watch == None:
         not_found("Resource not found");
-    return user.to_json()
+    return watch.to_json()
 
 
 """create"""
-@main.route('/users/', methods=['POST']) #sign-up
-def new_user():
-
-    # create and commit user
-    username = request.form.get('username')
-    password = request.form.get('password')
-    email = request.form.get('email')
-
-    if  email in ("", None) or password in ("", None):
-        return bad_request("Invalid request format!")
-
-    user = User(username=username, email=email)
-    user.password = password
-    db.session.add(user)
-    db.session.commit()
-
-    # get auth_token for the user:
-    auth_token = user.generate_auth_token(3600*24)
-
-    # create and send response
-    response = {}
-    response["user"] = user.to_json()
-    response["auth_token"] = auth_token
-
-    return jsonify(response)
-
-
-
-"""update"""
-@main.route('/<token>/users/<int:id>/', methods=['PUT'])
-def update_user(token, id):
+@main.route('/<token>/watchs/', methods=['POST'])
+def new_watch(token):
     if not auth_user(token):
         return unauthorized("You have to be logged in to perform this action")
 
-    user = User.query.get(id)
-    if not user:
-        not_found("Resource not found!")
+    # create and commit:
+    url = request.form.get('url')
+    frequency_id = request.form.get('frequency_id')
+    user_id = g.current_user.id
+    timestamp = time.time()
+    is_active = True
 
-    # create and commit user
-    username = request.form.get('username')
-    password = request.form.get('password')
-    email = request.form.get('email')
-
-    if  email in ("", None) or password in ("", None):
+    if url in ("", None) or frequency_id in ("", None):
         return bad_request("Invalid request format!")
 
-    user.username = username
-    user.email = email
-    user.password = password
-
-    db.session.add(user)
+    watch = Watch( url=url, frequency_id=frequency_id, user_id=user_id, timestamp=timestamp, is_active=is_active )
+    db.session.add(watch)
     db.session.commit()
+
+    # queue celery/broker:
+    queue_to_celery_broker(watch)
+
+    # run initial check:
+    run_check(watch.id)
 
     # create and send response
     response = {}
-    response["user"] = user.to_json()
+    response["watch"] = watch.to_json()
+    response["status"] = "success"
 
-    return jsonify(response)
+    return json.dumps(response)
 
 
-
-"""login"""
-@main.route('/users/login/', methods=['POST'])
-def login():
-
-    # get credentials
-    email = request.form.get('email')
-    password = request.form.get('password')
+"""update"""
+@main.route('/<token>/watchs/<int:id>/', methods=['PUT'])
+def update_user(token, id):
+    if not auth_user(token):
+        return unauthorized("You have to be logged in to perform this action")
     
-    if  email in ("", None) or password in ("", None):
+    watch = Watch.query.get(id)
+    if not watch:
+        not_found("Resource not found!")
+
+    # update and commit
+    url = request.form.get('url')
+    frequency_id = request.form.get('frequency_id')
+
+    if url in ("", None) or frequency_id in ("", None):
         return bad_request("Invalid request format!")
 
-    # check for a user with matching credentials
-    user = User.query.filter_by(email=email).first()
-    if user == None or user.verify_password(password)==False:
-        return bad_request("Invalid email or password!")
+    watch.url = url
+    watch.frequency_id = frequency_id
+    watch.timestamp = time.time()
 
-    # set the global current_user
-    g.current_user = user
-       
-    # get auth_token for the user
-    auth_token = user.generate_auth_token(3600*24) #1day
+    db.session.add(watch)
+    db.session.commit()
+
+    # queue celery/broker:
+    update_celery_broker(watch)
+
+    # run initial check:
+    run_check(watch.id)
+
+    # create and send response
+    response = {}
+    response["watch"] = watch.to_json()
+    response["status"] = "success"
+
+    return json.dumps(response)
+
+
+"""delete"""
+@main.route('/<token>/watchs/<int:id>/', methods=["DELETE"])
+def update_user(token, id):
+    if not auth_user(token):
+        return unauthorized("You have to be logged in to perform this action")
     
-    # create response
-    response =  {}
-    response["user"] = user.to_json()
-    response["auth_token"] = auth_token
+    watch = Watch.query.get(id)
+    if not watch:
+        not_found("Resource not found!")
 
-    return jsonify(response)
+    # clear on celery/broker
+    clear_celery_broker(watch)
+
+    # delete and commit
+    db.session.delete(watch)
+    db.session.commit()
+
+    # queue celery/broker:
+    # delete_celery_broker(watch)
+
+    # ! delete associated checks!
+    # 
+
+    # create and send response
+    response = {}
+    response["status"] = "success"
+
+    return json.dumps(response)
+
         
 
 

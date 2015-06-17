@@ -6,8 +6,6 @@ import json
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
 
-# from flask.ext.login import UserMixin
-
 
 class Role(db.Model):
     __tablename__ = 'roles'
@@ -70,9 +68,6 @@ class User(db.Model):
             return None
         return User.query.get(data['id'])
 
-    def __repr__(self):
-        return '<User %r>' % self.username
-
     def to_json(self):
         json_rep = {
             'id': self.id,
@@ -82,12 +77,8 @@ class User(db.Model):
         }
         return json.dumps(json_rep)
 
-    # @staticmethod
-    # def from_json(json_rep):
-    #     body = json_rep.get('body')
-    #     if body is None or body == '':
-    #         raise ValidationError('post does not have a body')
-    #     return Post(body=body)
+    def __repr__(self):
+        return '<User %r>' % self.username
 
 
 class Watch(db.Model):
@@ -96,12 +87,21 @@ class Watch(db.Model):
     url = db.Column(db.String(64))
     frequency_id = db.Column(db.Integer, db.ForeignKey('frequencies.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    email = db.Column(db.String(64))
-    client = db.Column(db.String(64))
     timestamp = db.Column(db.BigInteger)
     is_active = db.Column(db.Boolean)
     
     checks = db.relationship('Check', backref='watch', lazy='immediate')
+
+    def to_json(self):
+        json_rep = {
+            'id': self.id,
+            'url': self.url,
+            'frequency_id': self.frequency_id,
+            'user_id': self.user_id,
+            'timestamp': self.timestamp,
+            "is_active": self.is_active
+        }
+        return json.dumps(json_rep)
 
     def __repr__(self):
         return '<Watch %r>' % self.url
@@ -114,6 +114,16 @@ class Check(db.Model):
     report = db.Column(db.String(64))
     timestamp = db.Column(db.BigInteger)
     mail_sent = db.Column(db.Boolean)
+
+    def to_json(self):
+        json_rep = {
+            'id': self.id,
+            'watch_id': self.url,
+            'report': self.report,
+            'timestamp': self.timestamp,
+            'mail_sent': self.mail_sent
+        }
+        return json.dumps(json_rep)
 
     def __repr__(self):
         return '<Check %r>' % datetime.fromtimestamp(self.timestamp)
