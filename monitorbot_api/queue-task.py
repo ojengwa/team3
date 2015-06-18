@@ -1,6 +1,8 @@
 from celery import Celery
 import requests
 
+app = Celery()
+@app.task
 def url_ok(url):
     r = requests.head(url)
     if r.status_code == 200:
