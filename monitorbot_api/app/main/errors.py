@@ -1,12 +1,26 @@
-from flask import render_template
-from . import main
+from flask import jsonify
+from app.exceptions import ValidationError
+from . import api
 
 
-@main.app_errorhandler(404)
-def resource_not_found(e):
-    return 'IMPLEMENT-JSON-FORMATED-404-ERROR-RESPONSE-HERE', 404
+def bad_request(message):
+    response = jsonify({'error': 'bad request', 'message': message})
+    response.status_code = 400
+    return response
 
 
-@main.app_errorhandler(500)
-def internal_server_error(e):
-    return 'IMPLEMENT-JSON-FORMATED-500-ERROR-RESPONSE-HERE', 500
+def unauthorized(message):
+    response = jsonify({'error': 'unauthorized', 'message': message})
+    response.status_code = 401
+    return response
+
+
+def forbidden(message):
+    response = jsonify({'error': 'forbidden', 'message': message})
+    response.status_code = 403
+    return response
+
+
+@api.errorhandler(ValidationError)
+def validation_error(e):
+    return bad_request(e.args[0])

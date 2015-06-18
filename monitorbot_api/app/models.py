@@ -1,6 +1,7 @@
 from . import db
 from datetime import datetime
-
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from flask import current_app, request, url_for
 
 class Role(db.Model):
     __tablename__ = 'roles'
@@ -34,6 +35,19 @@ class User(db.Model):
     password = db.Column(db.String(64), index=True)
     email = db.Column(db.String(64), unique=True, index=True)
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
+
+    def generate_auth_token(self, expiration):
+        s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
+        return s.dumps({'id': self.id})
+    
+    @staticmethod
+    def verify_auth_token(token):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+        data = s.loads(token)
+        except:
+        return None
+        return User.query.get(data['id'])
 
     def __repr__(self):
         return '<User %r>' % self.username
