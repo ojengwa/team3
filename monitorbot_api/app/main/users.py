@@ -1,53 +1,128 @@
-from flask import jsonify, request, current_app, url_for
+import json
+from flask import g, jsonify, request, current_app, url_for
+from ..models import User
+from .. import db
 from . import main
-from ..models import User, Post
+from .authentication import auth_user
+from .errors import bad_request, unauthorized, forbidden, not_found
 
 
-@main.route('/users/<int:id>')
-def get_user(id):
-    user = User.query.get_or_404(id)
-    return jsonify(user.to_json())
+
+"""read all"""
+@main.route('/<token>/users/', methods=['GET'])                                   
+def get_users(token):
+    if not auth_user(token):
+        return unauthorized("You have to be logged in to perform this action")
+    # get and return all:
+    users = User.query.all()
+    list_of_dicts = [json.loads(user.to_json()) for user in users]
+    return json.dumps(list_of_dicts)
 
 
-@main.route('/users/<int:id>/posts/')
-def get_user_posts(id):
-    user = User.query.get_or_404(id)
-    page = request.args.get('page', 1, type=int)
-    pagination = user.posts.order_by(Post.timestamp.desc()).paginate(
-        page, per_page=current_app.config['FLASKY_POSTS_PER_PAGE'],
-        error_out=False)
-    posts = pagination.items
-    prev = None
-    if pagination.has_prev:
-        prev = url_for('main.get_posts', page=page-1, _external=True)
-    next = None
-    if pagination.has_next:
-        next = url_for('main.get_posts', page=page+1, _external=True)
-    return jsonify({
-        'posts': [post.to_json() for post in posts],
-        'prev': prev,
-        'next': next,
-        'count': pagination.total
-    })
+
+"""read one"""
+@main.route('/<token>/users/<int:id>/', methods=['GET'])
+def get_user(token, id):
+    if not auth_user(token):
+        return unauthorized("You have to be logged in to perform this action")
+    # get and return one with id:
+    user = User.query.get(id)
+    if user == None:
+        not_found("Resource not found");
+    return user.to_json()
 
 
-@main.route('/users/<int:id>/timeline/')
-def get_user_followed_posts(id):
-    user = User.query.get_or_404(id)
-    page = request.args.get('page', 1, type=int)
-    pagination = user.followed_posts.order_by(Post.timestamp.desc()).paginate(
-        page, per_page=current_app.config['FLASKY_POSTS_PER_PAGE'],
-        error_out=False)
-    posts = pagination.items
-    prev = None
-    if pagination.has_prev:
-        prev = url_for('main.get_posts', page=page-1, _external=True)
-    next = None
-    if pagination.has_next:
-        next = url_for('main.get_posts', page=page+1, _external=True)
-    return jsonify({
-        'posts': [post.to_json() for post in posts],
-        'prev': prev,
-        'next': next,
-        'count': pagination.total
-    })
+"""create"""
+@main.route('/users/', methods=['POST']) #sign-up
+def new_user():
+
+    # create and commit user
+    username = request.form.get('username')
+    password = request.form.get('password')
+    email = request.form.get('email')
+
+    if  email in ("", None) or password in ("", None):
+        return bad_request("Invalid request format!")
+
+    user = User(username=username, email=email)
+    user.password = password
+    db.session.add(user)
+    db.session.commit()
+
+    # get auth_token for the user:
+    auth_token = user.generate_auth_token(3600*24)
+
+    # create and send response
+    response = {}
+    response["user"] = user.to_json()
+    response["auth_token"] = auth_token
+
+    return jsonify(response)
+
+
+
+"""update"""
+@main.route('/<token>/users/<int:id>/', methods=['PUT'])
+def update_user(token, id):
+    if not auth_user(token):
+        return unauthorized("You have to be logged in to perform this action")
+
+    user = User.query.get(id)
+    if not user:
+        not_found("Resource not found!")
+
+    # create and commit user
+    username = request.form.get('username')
+    password = request.form.get('password')
+    email = request.form.get('email')
+
+    if  email in ("", None) or password in ("", None):
+        return bad_request("Invalid request format!")
+
+    user.username = username
+    user.email = email
+    user.password = password
+
+    db.session.add(user)
+    db.session.commit()
+
+    # create and send response
+    response = {}
+    response["user"] = user.to_json()
+
+    return jsonify(response)
+
+
+
+"""login"""
+@main.route('/users/login/', methods=['POST'])
+def login():
+
+    # get credentials
+    email = request.form.get('email')
+    password = request.form.get('password')
+    
+    if  email in ("", None) or password in ("", None):
+        return bad_request("Invalid request format!")
+
+    # check for a user with matching credentials
+    user = User.query.filter_by(email=email).first()
+    if user == None or user.verify_password(password)==False:
+        return bad_request("Invalid email or password!")
+
+    # set the global current_user
+    g.current_user = user
+       
+    # get auth_token for the user
+    auth_token = user.generate_auth_token(3600*24) #1day
+    
+    # create response
+    response =  {}
+    response["user"] = user.to_json()
+    response["auth_token"] = auth_token
+
+    return jsonify(response)
+        
+
+
+
