@@ -1,0 +1,111 @@
+/*
+/**********
+GENERAL
+**********/
+/*. {
+	background-color: grey;
+} */
+
+
+* {
+	box-sizing: border-box;
+} 
+
+/***********
+HEADING
+***********/
+header img {
+	height: 30%;
+	width: 30%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+a {
+	text-decoration: none;
+	list-style-type: none;
+}
+
+
+/*#bot {
+	text-align: left;
+	margin: 0;
+}*/
+
+/************
+BODY
+************/
+/* The background color is white and every text on it is grey. */
+body {
+	background-color: #fff;
+	color: #999;
+	font-size: small;
+	font-family: verdana;
+}
+
+
+
+/***********
+NAV
+***********/
+/*.nav img {
+	float: left;
+	position: absolute;
+	height: 2%;
+	width: 2%;
+} */
+
+/*.nav {
+	margin: 0 auto;
+	padding: 20px;
+	width: 80%;
+	border: 2px solid;
+	background: grey;
+	list-style-type: none;
+	display: -webkit-flex;
+	-webkit-flex-direction: row;
+	-webkit-justify-content: space-between;
+}
+
+.nav li {
+	margin: 10px;
+	border-radius: 10px;
+	background: #70968c;
+	color: #fff;
+}
+
+.nav a {
+	display: block;
+	padding: 15px;
+	color: inherit;
+	text-decoration: none;
+} 
+*/
+
+
+/************
+DIV
+************/
+.up {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+
+/***********
+FOOTER
+***********/
+footer {
+	font-size: 0.75em;
+	text-align: center;
+	padding-top: 50px;
+	color: #ccc;
+}
+
+footer img {
+	height: 2.5%;
+	width: 2.5%;
+}
