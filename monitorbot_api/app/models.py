@@ -44,9 +44,9 @@ class User(db.Model):
     def verify_auth_token(token):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
-        data = s.loads(token)
+            data = s.loads(token)
         except:
-        return None
+            return None
         return User.query.get(data['id'])
 
     def __repr__(self):
