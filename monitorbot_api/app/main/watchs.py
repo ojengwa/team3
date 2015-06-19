@@ -6,6 +6,7 @@ from ..models import User, Watch, Check
 from .. import db
 from . import main
 from .authentication import auth_user
+from .tasks import run_check, queue_to_celery_broker #, update_celery_broker, clear_celery_broker
 from .errors import bad_request, unauthorized, forbidden, not_found
 
 
@@ -40,15 +41,15 @@ def new_watch(token):
 
     # create and commit:
     url = request.form.get('url')
-    frequency_id = request.form.get('frequency_id')
+    frequency = request.form.get('frequency')
     user_id = g.current_user.id
     timestamp = time.time()
     is_active = True
 
-    if url in ("", None) or frequency_id in ("", None):
+    if url in ("", None) or frequency in ("", None):
         return bad_request("Invalid request format!")
 
-    watch = Watch( url=url, frequency_id=frequency_id, user_id=user_id, timestamp=timestamp, is_active=is_active )
+    watch = Watch( url=url, frequency=frequency, user_id=user_id, timestamp=timestamp, is_active=is_active )
     db.session.add(watch)
     db.session.commit()
 
@@ -74,17 +75,17 @@ def update_watch(token, id):
     
     watch = Watch.query.get(id)
     if not watch:
-        not_found("Resource not found!")
+        return not_found("Resource not found!")
 
     # update and commit
     url = request.form.get('url')
-    frequency_id = request.form.get('frequency_id')
+    frequency = request.form.get('frequency')
 
-    if url in ("", None) or frequency_id in ("", None):
+    if url in ("", None) or frequency in ("", None):
         return bad_request("Invalid request format!")
 
     watch.url = url
-    watch.frequency_id = frequency_id
+    watch.frequency = frequency
     watch.timestamp = time.time()
 
     db.session.add(watch)
@@ -109,6 +110,67 @@ def update_watch(token, id):
 def delete_watch(token, id):
     if not auth_user(token):
         return unauthorized("You have to be logged in to perform this action")
+    
+    watch = Watch.query.get(id)
+    if not watch:
+        return not_found("Resource not found!")
+
+    # clear on celery/broker
+    clear_celery_broker(watch)
+
+    # delete and commit
+    db.session.delete(watch)
+    db.session.commit()
+
+    # queue celery/broker:
+    # delete_celery_broker(watch)
+
+    # ! delete associated checks!
+    # 
+
+    # create and send response
+    response = {}
+    response["status"] = "success"
+
+    return json.dumps(response)
+
+
+"""create anony-watch"""
+@main.route('/watchs/anony/', methods=['POST'])
+def new_anony_watch():
+
+    # create and commit:
+    url = request.form.get('url')
+    frequency = request.form.get('frequency')
+    email = request.form.get('email')
+    timestamp = time.time()
+    is_active = True
+
+    if url in ("", None) or frequency in ("", None) or email in ("", None):
+        return bad_request("Invalid request format!")
+
+    watch = Watch( url=url, frequency=frequency, email=email, timestamp=timestamp, is_active=is_active )
+    db.session.add(watch)
+    db.session.commit()
+
+    # queue celery/broker:
+    # queue_to_celery_broker(watch)
+
+    # run initial check:
+    init_check = run_check(watch.id)
+
+    # create and send response
+    response = {}
+    response["watch"] = watch.to_json()
+    response["init_check"] = init_check
+    response["status"] = "success"
+
+    return json.dumps(response)
+
+
+"""delete anony-watch"""
+@main.route('/watchs/anony/<int:id>/', methods=["DELETE"])
+def delete_anony_watch(id):
     
     watch = Watch.query.get(id)
     if not watch:

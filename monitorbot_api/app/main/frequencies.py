@@ -15,7 +15,7 @@ def get_frequencies(token):
     if not auth_user(token):
         return unauthorized("You have to be logged in to perform this action")
     # get and return all:
-    frequencies = Frequencies.query.all()
+    frequencies = Frequency.query.all()
     list_of_dicts = [json.loads(frequency.to_json()) for frequency in frequencies]
     return json.dumps(list_of_dicts)
 
@@ -26,7 +26,7 @@ def get_frequency(token, id):
     if not auth_user(token):
         return unauthorized("You have to be logged in to perform this action")
     # get and return one with id:
-    frequency = Frequencies.query.get(id)
+    frequency = Frequency.query.get(id)
     if frequency == None:
         not_found("Resource not found");
     return frequency.to_json()

@@ -33,8 +33,6 @@ class Frequency(db.Model):
     name = db.Column(db.String(64), unique=True)
     value = db.Column(db.BigInteger, unique=True)
 
-    watchs = db.relationship('Watch', backref='frequency', lazy='noload')
-
     def to_json(self):
         json_rep = {
             'id': self.id,
@@ -100,7 +98,8 @@ class Watch(db.Model):
     __tablename__ = 'watchs'
     id = db.Column(db.Integer, primary_key=True)
     url = db.Column(db.String(64))
-    frequency_id = db.Column(db.Integer, db.ForeignKey('frequencies.id'))
+    email = db.Column(db.String(64))
+    frequency = db.Column(db.BigInteger)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     timestamp = db.Column(db.BigInteger)
     is_active = db.Column(db.Boolean)
@@ -111,7 +110,7 @@ class Watch(db.Model):
         json_rep = {
             'id': self.id,
             'url': self.url,
-            'frequency_id': self.frequency_id,
+            'frequency': self.frequency,
             'user_id': self.user_id,
             'timestamp': self.timestamp,
             "is_active": self.is_active
@@ -133,7 +132,7 @@ class Check(db.Model):
     def to_json(self):
         json_rep = {
             'id': self.id,
-            'watch_id': self.url,
+            'watch_id': self.watch_id,
             'report': self.report,
             'timestamp': self.timestamp,
             'mail_sent': self.mail_sent
