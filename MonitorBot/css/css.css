@@ -40,7 +40,7 @@ BODY
 body {
 	background-color: #fff;
 	color: #999;
-	font-size: small;
+	font-size: medium;
 	font-family: verdana;
 }
 
@@ -108,4 +108,29 @@ footer {
 footer img {
 	height: 2.5%;
 	width: 2.5%;
+}
+
+
+/************
+ONE PAGE
+************/
+.url {
+	text-align: center;
+}
+h2 {
+	text-align: center;
+}
+
+h3 {
+	text-decoration: underline;
+}
+
+#preloader {
+	text-align: center;
+}
+
+
+label {
+    display: block;
+    margin-bottom: 10px;
 }
