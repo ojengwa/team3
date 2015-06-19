@@ -14,12 +14,21 @@ class Config:
     MONITOR_BOT_MAIL_SENDER = 'Monitor Bot <monitorbot.app@gmail.com>'
     MONITOR_BOT_ADMIN = os.environ.get('MB_ADMIN') or '<monitorbot.app@gmail.com>'
 
-    BROKER_URL = 'localhost:6379'
-    # redis://:Cloudbot@hostname:port/db_number
-    BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}  # 1 hour.
-    CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
-    BROKER_TRANSPORT_OPTIONS = {'fanout_prefix': True}
-    BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 43200}
+    BROKER_BACKEND                  = "redis" 
+    BROKER_HOST                     = "localhost" 
+    BROKER_PORT                     = 6379 
+    BROKER_VHOST                    = "1" 
+    REDIS_CONNECT_RETRY             = True 
+    REDIS_HOST                      = "localhost" 
+    REDIS_PORT                      = 6379 
+    REDIS_DB                        = "0" 
+    CELERY_SEND_EVENT               = True 
+    CELERYD_LOG_LEVEL               = 'INFO' 
+    CELERY_RESULT_BACKEND           = "redis" 
+    CELERY_TASK_RESULT_EXPIRES      = 25 
+    CELERYD_CONCURRENCY             = 8 
+    CELERYD_MAX_TASKS_PER_CHILD     = 10 
+    CELERY_ALWAYS_EAGER             = False
 
 
     @staticmethod
