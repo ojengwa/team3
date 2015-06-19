@@ -7,7 +7,7 @@ from config import config
 mail = Mail()
 moment = Moment()
 db = SQLAlchemy()
-# cl = Celery()
+
 
 
 def create_app(config_name):
